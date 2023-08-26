@@ -1,0 +1,33 @@
+# На примере Postpay
+# P.S. Далеко не все постпей акты по Azure Plan закрываются в один день
+Информация по актам:
+В акты попадают закрытые списания, связь подписки с актом идет через объект InvoiceSubscription.
+Закрываются они на следующий день после окончания финансового переода (логика применима для актов
+по всем подпискам, исключение акты по подпискам Azure Plan)
+Сперва должен отработать сценария закрытия финансового переода
+!Проверить для закрытых списаний! ActivePlatform::Interface::Scenario::BillingProcess::ClosePostpayPeriod.where(reseller_id: 66).where('"parameters" -> \'invoice_id\' = ?', '129936')
+который создает объект Subscription.find(???).financial_periods.last, благодоря которому акт проходит выборку на закрытие
+Потом отрабатывает сценарий на закрытие акта:
+ActivePlatform::Interface::Scenario::BillingProcess::PostpayInvoiceClosing.where(reseller_id: 66).where('"parameters" -> \'account_id\' = ?', '17807') - если акт по постпей подпискам
+
+
+акты по Azure Plan
+Списания по подписке закрываются, когда приходит финальный акт от MS (9-15 числа) на всего
+реселлера посмотреть его можно на сервере микросервиса сервер sl-aws-prod-ap-mcs-01 -> контейнер azure_billing_sidekiq -> sudo docker compose exec sidekiq bin/rails c 
+из директории /activeplatform/compose/azure_billing/:
+service = Service.find_by!(application_id: application_id)
+invoice = service.partner.invoices.find_by!(start_date: billing_period_start)
+Когда финальный акт пришел отрабатывает сценарий на создание финансового приода подписок
+ActivePlatform::Interface::Scenario::BillingProcess::External::ClosePostpayPeriod.where(reseller_id: 66).where('"parameters" -> \'invoice_id\' = ?', '129936')
+после выполнения которого удаляются драфтовые списания, создается и закрывается полное, создается объект Subscription.find(44113).financial_periods за прошедший месяц,
+благодаря этому объекту акты попадают в выборку на закрытие:
+COMPLETED_FINANCIAL_PERIODS = <<-SQL.squish
+          COUNT(DISTINCT financial_periods.id) FILTER (WHERE financial_periods.completed IS true AND
+          subscriptions.status <> 'deleted' AND
+          financial_periods.start_date = invoices.from_date AND
+          financial_periods.end_date = invoices.to_date) = COUNT(DISTINCT subscriptions.id) FILTER (WHERE subscriptions.status <> 'deleted')
+        SQL
+Закрывается инвойс после выполнения сценария: 
+ActivePlatform::Interface::Scenario::BillingProcess::PostpayInvoiceClosing.where(reseller_id: 66).where('"parameters" -> \'account_id\' = ?', '17807')
+
+ТАК ЖЕ Подписки в инвойсе (subscriptions) появляетются, если у подписки есть списания за текущий период(и подчищаются при закрытии инвойса) (две проверки на наличие списаний?)

@@ -1,0 +1,24 @@
+Current.reseller = Reseller.find(66)
+module Notifications  
+  class Renderer    
+  def initialize(responder)
+      @responder = responder    
+  end    
+  def render(template)
+      {}.tap do |result|
+        template.settings['to'] = 'kiryl.masliukou@activeplatform.com'        
+        template.settings['cc'] = 'kiryl.masliukou@activeplatform.com'        
+        template.settings['bcc'] = 'kiryl.masliukou@activeplatform.com'        
+        template.settings.merge({ body: template.body }).each do |field, value|
+          liquid_template = Liquid::Template.parse(value)
+          result[field.to_sym] = liquid_template.render(@responder.variables)
+        end        
+        result[:attachments] = @responder.attachments      
+      end    
+    end  
+  end 
+end
+EVENT_TYPE = ::Event::RESEND_ORDER;
+responder = ::Event.responder_class(EVENT_TYPE).new(Order.find 267024)
+event_handler = EventHandler.find(23472);
+::Notifications::Sender.new(responder, event_handler).run

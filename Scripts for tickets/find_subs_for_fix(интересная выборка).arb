@@ -1,0 +1,6 @@
+def find_subs_for_fix()
+  plans_categories = PlanCategory.where(key: "csp_p1y_monthly_nce")
+  plans = Plan.where(plan_category_id: plans_categories.ids).where(status: :active).select { |plan| !plan.subscriptions.empty? }
+  plans_ids = plans.pluck(:id)
+  @subscriptions = Subscription.where(plan_id: plans_ids).where(payment_model: "postpay").select { |sub| sub.charges.where(close_date: Date.new(2022,11,1)).where(status: :closed).select { |charge| charge.order != "ChangeOrder" } }
+end

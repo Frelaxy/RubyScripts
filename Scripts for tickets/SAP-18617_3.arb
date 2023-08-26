@@ -1,0 +1,30 @@
+@subs_id_where_not_actual_price = []
+counter = 0
+orders = Order.where(status: :completed).where(type: "RenewalOrder").where("created_at > ? and created_at < ?", Date.new(2022,1,1), Date.new(2022,6,1)).select { |order| order.subscription.plan_category.key == "microsoft_csp_monthly" }
+subs_ids = orders.map { |order| order.subscription_id }
+subs_ids.map do |sub_id|
+  counter = counter + 1
+  puts "Обрабатывается #{counter} подписка из #{subs_ids.count} id:#{sub_id}"
+  sub = Subscription.find(sub_id)
+  order = sub.orders.where(type: "RenewalOrder", status: :completed).last
+  if !order.nil?
+    uniq_resource_charges = order.charges.uniq { |c| c.subscription_resource_id }
+    uniq_resource_charges.map do |c|
+      new_price = c.price
+      subscription_resource = c.subscription_resource
+      if !subscription_resource.nil? && subscription_resource.price.recurring_fee > new_price.recurring_fee
+        @subs_id_where_not_actual_price << c.subscription.id
+      end
+    end
+  end
+end
+subs_ids_for_fix = Subscription.where(id: @subs_id_where_not_actual_price).where.not(status: :deleted).ids
+subs_ids_for_fix.map do |sub_id|
+  sub = Subscription.find(sub_id)
+  order = sub.orders.where(type: "RenewalOrder", status: :completed).last
+  uniq_resource_charges = order.charges.uniq { |c| c.subscription_resource_id }
+  charge = uniq_resource_charges.last
+  price_from_rn_order = charge.price.recurring_fee
+  actual_subscription_resource_pirce = charge.subscription_resource.price.recurring_fee
+  puts "Подписка #{sub_id} реселлер #{sub.reseller.id}.Текущая цена ресурса #{actual_subscription_resource_pirce} должна быть #{price_from_rn_order}"
+end

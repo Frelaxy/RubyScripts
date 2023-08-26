@@ -1,0 +1,24 @@
+def close_postpay_invoice()
+  invoices = Invoice::Base.where("from_date > ? and from_date < ?", Date.new(2022,10,30), Date.new(2022,12,1)).where.not(status: :closed).where("to_date < ?", Date.new(2022,12,7)).where(close_type: "platform")
+  invoices.map do |invoice|
+    p "Invoice #{invoice.id} to process..."
+    reseller_id = invoice.reseller_id
+    account_id = invoice.account_id
+    scenario = ActivePlatform::Interface::Scenario::BillingProcess::PostpayInvoiceClosing.where(reseller_id: reseller_id).where('"parameters" -> \'account_id\' = ?', "#{account_id}").where(completed_at: nil).where.not(status: :completed)
+    scenario.update(status: :completed)
+    p "Status scenario was changed"
+    if !invoice.payments.empty?
+      p "Платёж существует"
+    end
+    invoice.recalculate_total!
+    invoice.update(status: :closed)
+    p "Invoice was closed manually"
+    Note.create!(
+      content: "Invoice #{invoice.id} | SAP-18295",
+      noteable_id: account_id,
+      noteable_type: "Account",
+      manager_id: Manager.find_by(email: 'kiryl.masliukou@activeplatform.com', reseller_id: 65).id,
+      account_id: account_id
+    )
+  end
+end
