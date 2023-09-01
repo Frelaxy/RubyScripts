@@ -1,6 +1,7 @@
 # Объединить списания, когда уже поздняк метаться
 def miss_postpay_charges_unification(sub_id, date, ticket)
-    subscription = Subscription.find(sub_id)
+  subscription = Subscription.find(sub_id)
+  ActiveRecord::Base.transaction do
     charges = subscription.charges.where(operate_to: date)
     last_charge = charges.order(created_at: :desc).first
     charge = Charge::ExternalResource.new
@@ -15,6 +16,7 @@ def miss_postpay_charges_unification(sub_id, date, ticket)
     charge.currency = charge.currency_rate.to
     charge.quantity = 1
     charge.amount = charges.sum(&:amount)
+    charge.net_amount = charge.amount
     charge.duration = charges.sum(&:duration)
     charge.close_date = charges.order(close_date: :desc).first.close_date
     charge.discount_amount = charges.sum(&:discount_amount)
@@ -34,6 +36,7 @@ def miss_postpay_charges_unification(sub_id, date, ticket)
     puts " Charge ID #{charge.id} was created and closed";
     puts " ---------------------------------------------"
   end
+end
   # Вызов на примере Azure Plan в РБ
   plan_classes = PlanClass.where(key: :microsoft_azure).where(reseller_id: 458)
   plans = Plan.where(plan_class_id: plan_classes.ids)

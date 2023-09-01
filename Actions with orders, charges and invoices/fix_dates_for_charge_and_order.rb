@@ -1,34 +1,51 @@
 # Метод для исправления заказа и всех его сущностей на другие даты:
 # Обратить внимание на даты закрытия списания при csp annual. Они закрываются датой закрытия, а не через год!
-def fix_order_dates(charge_id, date_from, date_to)
-  charge = Charge::Base.find(charge_id)
+def fix_charge_dates_and_recalulate(charge_id, date_from = nil, date_to = nil, new_dates = true)
+  @charge = Charge::Base.find(charge_id)
   ActiveRecord::Base.transaction do
-    charge.operate_from = date_from
-    charge.operate_to = date_to
-    if charge.subscription.billing_type == "csp_annual"
-      p "You have to ckeck a close date for this charge. It's #{charge.close_date} now"
+    set_new_dates(date_from, date_to) if whithout_new_dates
+    recalculate_charge
+    regenerate_reseller_charges
+    update_order_details
+    recalculate_payment_and_invoice
+    puts "Order ID: {@charge.order.id}"
+  end
+
+  def set_new_dates(date_from, date_to)
+    @charge.operate_from = date_from
+    @charge.operate_to = date_to
+    if @charge.subscription.billing_type == 'csp_annual'
+      p "You have to ckeck a close date for this charge. It's #{@charge.close_date} now"
     elsif
-      charge.close_date = date_to
+      @charge.close_date = date_to
     end
-    charge.duration = ::Calculators::DurationBetweenDates.new(charge, from: charge.operate_from, to: charge.operate_to, billing_day: charge.plan.billing_day).call
-    charge.recalculate_amount!
-    charge.save
-    order = charge.order
-    OrderDetailsGenerator.new(order).generate!
-    order.recalculate_total!
-    order.recalculate_net_cost!
-    if !order.payment.nil? && order.payment.status != 'completed'
-      order.payment.update(total: order.total)
+  end
+  
+  def recalculate_charge
+    @charge.recalculate_duration!
+    @charge.recalculate_amount!
+    @charge.save!
+    puts "Charge recalculated and saved"
+  end
+  
+  def regenerate_reseller_charges
+    if @charge.status == 'closed'
+      ResellerCharge.where(charge_id: @charge.id).delete_all
+      ResellerChargesBuilder.new(@charge).call
+      puts "Reseller charges regenerated"
+    else
+      puts "Charge is not closed, no need to regenerate Reseller charges"
     end
   end
 end
+
 # __________________________________________________________________________________________
-charge_id = 1000609
-date_from = Date.new(2023,7,23)
-date_to = Date.new(2024,5,28)
-fix_order_dates(charge_id, date_from, date_to)
+charge_id = 1002724
+date_from = Date.new(2023,8,11)
+date_to = Date.new(2023,9,1)
+fix_charge_dates_and_recalulate(charge_id, date_from, date_to)
 
-
+fix_charge_dates_and_recalulate(charge_id, new_dates = false) # if just recalculate charge and related objects
 
 charges_ids = [990911, 990910, 990909, 990908]
-charges_ids.each {|charge_id| fix_order_dates(charge_id, date_from, date_to)}
+charges_ids.each {|charge_id| fix_charge_dates_and_recalulate(charge_id, date_from, date_to)}

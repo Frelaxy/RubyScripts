@@ -15,7 +15,7 @@ def send_notification_with_file(subject, body, path_to_file = nil)
   end
   mailer.mail(
     from: 'service@cloud.softline.com',
-    to: ['kiryl.masliukou@activeplatform.com'],
+    to: ['2e96cbc8.activeplatform.com@emea.teams.ms'],
     subject: subject
   ) {|format| format.html {"<html><body>#{body}</body></html>"}}
   mailer.message.deliver
