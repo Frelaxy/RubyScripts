@@ -1,11 +1,6 @@
-def recalculate_order_payment_and_invoice(order_id)
+def recalculate_order_payment_invoice(order_id)
 @order = Order.find(order_id)
-  ActiveRecord::Base.transaction do
-    update_order_details
-    recalculate_payment
-    recalculate_invoice
-  end
-  
+
   def update_order_details
     OrderDetailsGenerator.new(@order).generate!
     @order.recalculate_total!
@@ -41,5 +36,11 @@ def recalculate_order_payment_and_invoice(order_id)
     else
       puts "Invoice not found, need to check this problem"
     end
+  end
+  
+  ActiveRecord::Base.transaction do
+    update_order_details
+    recalculate_payment
+    recalculate_invoice
   end
 end
