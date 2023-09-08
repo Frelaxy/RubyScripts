@@ -1,6 +1,0 @@
-orders_ids = [249395,249394,249392,249388,249385,249383,249380,249379,249377,249374,249370,249365,249361,249357]
-orders = Order.where(id: orders_ids)
-@total = 0.0e1
-orders.each do |order|
-    order.update(payment: payment)
-end
