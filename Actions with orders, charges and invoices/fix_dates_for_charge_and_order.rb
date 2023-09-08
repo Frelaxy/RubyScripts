@@ -30,14 +30,14 @@ def fix_charge_dates_and_recalulate(charge_id, date_from = nil, date_to = nil, n
     set_new_dates(date_from, date_to) if new_dates
     recalculate_charge
     regenerate_reseller_charges
-    puts "Order ID: {@charge.order.id}"
+    puts "Order ID: #{@charge.order.id}"
   end
 end
 
 # __________________________________________________________________________________________
-charge_id = 1010503
-date_from = Date.new(2023,7,15)
-date_to = Date.new(2023,8,1)
+charge_id = 1011531
+date_from = Date.new(2023,9,1)
+date_to = Date.new(2023,10,1)
 fix_charge_dates_and_recalulate(charge_id, date_from, date_to)
 
 fix_charge_dates_and_recalulate(charge_id, new_dates = false) # if just recalculate charge and related objects

@@ -1,8 +1,8 @@
 def cancel_order(order_id, ticket_id = '')
   order = Order.find(order_id)
-  order.charges.in_blocked.update(status: :deleted)
+  order.charges.in_blocked.each(&:to_deleted)
   order.payment.update(status: :cancelled) if !order.payment.nil? && order.payment.status != "completed"
-  order.items.update(status: :cancelled)
+  order.items.each(&:to_closed)
   order.update(status: :cancelled)
   Note.create!(
     content: "Order cancelled manually | #{ticket_id}",

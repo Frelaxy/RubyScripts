@@ -3,6 +3,7 @@ def create_charge(order_id, date_from, date_to, subs_res_ids, currency_rate = ni
   @order = Order.find(order_id)
   @currency_rate = currency_rate
   subscription_resources = SubscriptionResource.where(id: subs_res_ids)
+  
   def create_charge_from_subscription_resource(subscription_resource, date_from, date_to)
     if @order.type == ProlongOrder.name
       item = @order.prolong_items.empty? ? create_prolong_item(subscription_resource) : @order.prolong_items.first
