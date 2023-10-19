@@ -10,6 +10,7 @@ module SupportTeam
             @order.items.update(status: :completed)
             @order.update(status: :completed, closed_at: DateTime.current)
             @order.charges.in_new.each(&:to_blocked)
+            complete_scenario
             refund_charges if @order.type == ChangeOrder.name
             close_charges
             change_subscription_and_application_parameters
@@ -80,6 +81,11 @@ module SupportTeam
           end
         end
 
+        def complete_scenario
+          scenario = Scenario.where(relation_data: {"order_id"=>@order.id}).try(:last)
+          scenario.update(status: :completed, completed_at: DateTime.current) if !scenario.nil?
+        end
+
         def create_note
           manager_id = Current.manager.nil? ? nil : Current.manager.id
           Note.create!(
@@ -90,7 +96,7 @@ module SupportTeam
             account_id: @order.account.id
           )
         end
-        puts "SupportTeam::Order::OrderComplete.call(order_id, '')"
+        puts "SupportTeam::Order::OrderComplete.call(order_id = , ticket_id = '')"
       end
     end
   end

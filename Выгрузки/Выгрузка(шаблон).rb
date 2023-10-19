@@ -1,8 +1,8 @@
-reseller_ids = 574
+reseller_ids = 1144
 
 subs = Reseller.where(id: reseller_ids).map {|r| r.subscriptions.where(status: [:active,:waiting_for_manual_approve])}.flatten.compact;
 
-CSV.open("/app/support/kiryl/SAP-19804.csv", "wb") do |csv|
+CSV.open("/app/support/kiryl/SAP-20542.csv", "wb") do |csv|
   csv << ["AP Reseller ID", "Account ID", "Subscription ID", "Subscription Name", "Account name", "Subscription status", "MS Subscription ID" , "MS Tenant ID", "MS Tenant Name", "Tax ID", "AP Account owner email"]
   
   subs.map do |sub|

@@ -1,12 +1,12 @@
 # Метод для исправления заказа и всех его сущностей на другие даты:
 # Обратить внимание на даты закрытия списания при csp annual. Они закрываются датой завершения заказа, а не через год!
-def fix_charge_dates_and_recalulate(charge_id, date_from = nil, date_to = nil, new_dates = true)
+def fix_charge_dates_and_recalulate(charge_id, date_from = nil, date_to = nil)
   @charge = Charge::Base.find(charge_id)
 
   def set_new_dates(date_from, date_to)
     @charge.operate_from = date_from
     @charge.operate_to = date_to
-    @charge.close_date = @charge.subscription.billing_type == 'csp_annual' ? @charge.order.closed_at.to_date : date_to
+    @charge.close_date = @charge.subscription.billing_type == 'csp_annual' ? @charge.order.closed_at.to_date : date_to if !@charge.new?
   end
   
   def recalculate_charge
@@ -27,7 +27,7 @@ def fix_charge_dates_and_recalulate(charge_id, date_from = nil, date_to = nil, n
   end
 
   ActiveRecord::Base.transaction do
-    set_new_dates(date_from, date_to) if new_dates
+    set_new_dates(date_from, date_to)
     recalculate_charge
     regenerate_reseller_charges
     puts "Order ID: #{@charge.order.id}"
@@ -35,12 +35,11 @@ def fix_charge_dates_and_recalulate(charge_id, date_from = nil, date_to = nil, n
 end
 
 # __________________________________________________________________________________________
-charge_id = 1011531
-date_from = Date.new(2023,9,1)
-date_to = Date.new(2023,10,1)
+charge_id = 1019419
+date_from = Date.new(2023,10,10)
+date_to = Date.new(2024,10,10)
 fix_charge_dates_and_recalulate(charge_id, date_from, date_to)
 
-fix_charge_dates_and_recalulate(charge_id, new_dates = false) # if just recalculate charge and related objects
 
-charges_ids = [990911, 990910, 990909, 990908]
-charges_ids.each {|charge_id| fix_charge_dates_and_recalulate(charge_id, date_from, date_to)}
+charges_ids = [1019599, 1019600]
+charges_ids.each {|charge_id| fix_charge_dates_and_recalulate(charge_id, new_dates = nil)}

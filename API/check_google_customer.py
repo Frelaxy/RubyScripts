@@ -47,11 +47,11 @@ service = build(serviceName='reseller', version='v1', http=http, cache_discovery
  
 
 #get customer by domain:
-customer = service.customers().get(customerId='rafinad.io').execute()
+customer = service.customers().get(customerId='asgbs.com').execute()
  
 #get customer subscriptions
  
-kwargs = {'customerId': 'C02wkf5hh' }
+kwargs = {'customerId': 'C03x8iep1' }
  
 subscriptions_api = service.subscriptions()
 request = subscriptions_api.list(**kwargs)

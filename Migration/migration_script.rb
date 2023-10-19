@@ -1,11 +1,11 @@
 load '/app/support/support_scripts/ms_legasy_migrator/migrate_ms_legasy.rb'
 
 reseller_id = 447
-account_id = 30624
-tenant_id = 'f1752cab-9961-4ece-89b7-f93027f72de2'
-tenant_name = 'uap.edu.pe'
+account_id = 21362
+tenant_id = 'ae544a57-aecb-4bf9-828a-5b520732b110'
+tenant_name = 'upc.pe'
 data = {
-    '9bb27672-a926-4f5d-aac1-31bdd7569b1c' => 8.75
+    '8D95FBC2-C5A2-4670-9105-CD7BBB3E2A8B' => 4.24
 }
 
 

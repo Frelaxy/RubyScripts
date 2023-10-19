@@ -1,4 +1,4 @@
-#for PO and SO
+#for PO and SO and RN
 def create_charge(order_id, date_from, date_to, subs_res_ids, currency_rate = nil)
   @order = Order.find(order_id)
   @currency_rate = currency_rate
@@ -9,6 +9,8 @@ def create_charge(order_id, date_from, date_to, subs_res_ids, currency_rate = ni
       item = @order.prolong_items.empty? ? create_prolong_item(subscription_resource) : @order.prolong_items.first
     elsif @order.type == SalesOrder.name
       item = @order.upgrade_items.empty? ? create_upgrade_item(subscription_resource) : @order.upgrade_items.find_by(target_id: subscription_resource.id)
+    elsif @order.type == RenewalOrder.name
+      item = @order.renew_item
     end
     attributes = {
       reseller: subscription_resource.subscription.reseller,
@@ -41,6 +43,7 @@ def create_charge(order_id, date_from, date_to, subs_res_ids, currency_rate = ni
       description: subscription_resource.subscription.name,
       custom_price: subscription_resource.subscription.custom_price?
     )
+    item.save!
     return item
   end
 
@@ -52,9 +55,10 @@ def create_charge(order_id, date_from, date_to, subs_res_ids, currency_rate = ni
       type: "ProvisioningItem::Upgrade",
       operation_value: subscription_resource.additional.to_s,
       status: "completed",
-      description: subscription_resource.name
+      description: subscription_resource.name,
       custom_price: subscription_resource.subscription.custom_price?
     )
+    item.save!
     return item
   end
 
@@ -67,10 +71,10 @@ end
 
 #_________________________________________________________________________________________
 
-order_id = 261430
-subs_res_ids = [389765]
-date_from = Date.new(2023,7,15)
-date_to = Date.new(2023,8,1)
+order_id = 266951
+subs_res_ids = [391424]
+date_from = Date.new(2023,10,10)
+date_to = Date.new(2024,10,10)
 create_charge(order_id, date_from, date_to, subs_res_ids)
 
 

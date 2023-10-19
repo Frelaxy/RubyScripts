@@ -1,11 +1,11 @@
 reseller_ids = %w[392 393 452 456 447 460 536 400 419 337 530 892 848 1094 1099 349 398 397 1136]
-reseller_ids = 574
+reseller_ids = 1144
 plan_classes_ids = PlanClass.where(key: :microsoft_azure_plan).ids
 plans_ids = Plan.where(plan_class_id: plan_classes_ids).ids
 
 subs = Reseller.where(id: reseller_ids).map {|r| r.subscriptions.where(plan_id: plans_ids, status: [:active, :waiting_for_manual_approve])}.flatten.compact;
 
-CSV.open("/app/support/kiryl/SAP-19804_azure.csv", "wb") do |csv|
+CSV.open("/app/support/kiryl/SAP-20542_azure.csv", "wb") do |csv|
   csv << ["AP Reseller ID", "Account ID", "Subscription ID", "Subscription Name", "Account name", "Subscription status", "MS Subscription ID" , "MS Tenant ID", "MS Tenant Name", "Azure Plan ID", "Tax ID", "AP Account owner email"]
   
   subs.map do |sub|

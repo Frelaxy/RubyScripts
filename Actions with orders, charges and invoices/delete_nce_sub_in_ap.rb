@@ -11,7 +11,7 @@ def delete_nce_sub_in_ap(sub_id, ticket_id = '')
     origin.microsoft_order_id.nil? ? origin.update(microsoft_order_id: '_broken') : origin.update(microsoft_order_id: origin.microsoft_order_id + '_broken')
     application.update(service_status: :deleted)
     subscription.update(status: :deleted)
-    subscription.charges.in_blocked.update(status: :deleted) if subscription.charges.exists?
+    subscription.charges.where(status: [:blocked, :new]).update(status: :deleted) if subscription.charges.exists?
     Note.create!(
       content: "Subscription was deleted only in AP | #{ticket_id}",
       noteable_id: subscription.id,

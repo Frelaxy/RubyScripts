@@ -4,8 +4,8 @@ def delete_csp_sub_in_ap(subscription_id, ticket_id = '')
     application = subscription.applications.last
     origin = application.origin
     origin.external_id.nil? ? origin.update(external_id: '_broken') : origin.update(external_id: origin.external_id + '_broken')
-    origin.microsoft_order_id.nil? ? origin.update(order_id: '_broken') : origin.update(order_id: origin.microsoft_order_id + '_broken')
-    origin.update(service_status: :deleted)
+    origin.microsoft_order_id.nil? ? origin.update(microsoft_order_id: '_broken') : origin.update(microsoft_order_id: origin.microsoft_order_id + '_broken')
+    origin.update(service_status: :deleted) if origin.respond_to?(:service_status)
     application.update(service_status: :deleted)
     subscription.update(status: :deleted)
     subscription.charges.in_blocked.update(status: :deleted) if subscription.charges.exists?
