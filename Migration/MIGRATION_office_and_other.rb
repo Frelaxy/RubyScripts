@@ -43,7 +43,7 @@ class XLSXMatrixWriter
   def self.write(matrix:, file_path:, sheet: 'Sheet1', rewrite: true)
     file_path = File.expand_path(file_path)
     sheet = sheet[0..30]
-    File.delete(file_path) if rewrite && File.exists?(file_path)
+    File.delete(file_path) if rewrite && File.exist?(file_path)
     workbook = FastExcel.open(file_path)
     progressbar = ProgressBar.create(total: matrix.size, format: PROGRESSBAR_FORMAT)
     worksheet = workbook.add_worksheet(sheet)
@@ -110,7 +110,7 @@ class MigrationFileCreator
       result_type = options[:result_type]
       writer_kwargs = {
         matrix: matrix,
-        file_path: original_file_path && File.expand_path(original_file_path) || "/home/app/core/support/migration_#{account_id}.#{result_type}"
+        file_path: original_file_path && File.expand_path(original_file_path) || "/app/migration_#{account_id}.#{result_type}"
       }
       writer_kwargs.merge!(sheet: CUSTOMERS_SHEET_NAME) if result_type == :xlsx
       WRITER_CLASS[result_type].write(**writer_kwargs)
@@ -148,7 +148,7 @@ _____________________________________________________________________________
 вызов создания файла
 __________________________________________
 
-MigrationFileCreator.xlsx(29851) # account id 
+MigrationFileCreator.xlsx(28514) # account id 
 
 #  Если клиента нет no customer, то можно проверить это с помощью: Plugin::Office365::Customer.where(account_id: 29851)
 # Если нет, то создать можно с помощью 
@@ -170,9 +170,9 @@ _____________________________________________________________
 #который создаст вторую страницу с ресурсами подписок клиента
 #файлик можно найти в контейнере support-spring-core-1
 
-file_path = "/home/app/core/support/migration_29851.xlsx" #путь будет после генерированного файла
-application_template = Plugin::Office365::ApplicationTemplate.find(9775); #Plan.find(1180709).root.application_templates.last.origin
-reseller = Reseller.find(397); #t1
+file_path = "/app/migration_28514.xlsx" #путь будет после генерированного файла
+application_template = Plugin::Office365::ApplicationTemplate.find(9773); #Plan.find(1180709).root.application_templates.last.origin
+reseller = Reseller.find(400); #t1
 
 generator = Plugin::Office365::Support::XlsGenerator.new(file_path: file_path, app_template: application_template, reseller: reseller);
 generator.call
@@ -240,7 +240,7 @@ module Plugin
             #  next
             #end
             ActiveRecord::Base.transaction do
-              c_id = 24638 #Plugin::Office365::Customer.where(account_id: 29190)
+              c_id = 23305 #Plugin::Office365::Customer.where(account_id: 29190)
               sc_report = subscription_creator(customer_id: c_id).call
               sub_ids_for_customer = sc_report.data
               #BalanceCorrector.new(c_id, sub_ids_for_customer, logger).call
@@ -286,7 +286,7 @@ module Plugin
   module Office365
     module Support
       class SubscriptionCreator
-        ALLOWED_SUBSCRIPTION_IDS = ['5F815742-D780-43B3-B619-053BD840EF4D', 'E32B8E8A-14F8-4810-9E09-F6B8DCFD4E30'].freeze
+        ALLOWED_SUBSCRIPTION_IDS = ['60E1EA95-E0B1-4BD3-81AE-135E0CBFBE72'].freeze
 
         def items
           @_items ||= begin
@@ -314,14 +314,14 @@ __________________________________________________
 # migrator.error_rows returns users who had had mistakes
 
 
-file = File.expand_path('/home/app/core/support/kiryl/customer_lists_with_prices_from_1674053613.xlsx');
-application_template = Plugin::Office365::ApplicationTemplate.find(9298);
-reseller = Reseller.find(419);
-generate_charges_from_next_billing_day = true;
+file = File.expand_path("/app/public/uploads/migrations/customer_lists_with_prices_from_1695317846.xlsx");
+application_template = Plugin::Office365::ApplicationTemplate.find(9773);
+reseller = Reseller.find(400);
+generate_charges_from_next_billing_day = false;
 notify_account_created = false;
 
 # env: :test - тест , env: :something_else - на запуск 
-migrator = Plugin::Office365::Support::Migrator.new(file_path: file,app_template: application_template,reseller: reseller, env: :test, notify_account_created: notify_account_created);
+migrator = Plugin::Office365::Support::Migrator.new(file_path: file,app_template: application_template,reseller: reseller, env: :test, notify_account_created: notify_account_created,generate_charges_from_next_billing_day: generate_charges_from_next_billing_day);
 migrator.call
 
 migrator = Plugin::Office365::Support::Migrator.new(file_path: file,app_template: application_template,reseller: reseller, env: :go, notify_account_created: notify_account_created,generate_charges_from_next_billing_day: generate_charges_from_next_billing_day);

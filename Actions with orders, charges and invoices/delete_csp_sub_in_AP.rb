@@ -1,27 +1,22 @@
-def delete_csp_sub_in_ap(sub_id, ticket_id = '')
+def delete_csp_sub_in_ap(subscription_id, ticket_id = '')
   ActiveRecord::Base.transaction do
-    sub = Subscription.find(sub_id);
-    app = sub.applications.last;
-    origin = sub.applications.last.origin;
-        if origin.external_id == nil
-            origin.update(external_id: '_broken');
-            origin.update(order_id: '_broken');
-        else
-            origin.update(external_id: origin.external_id + '_broken');
-            origin.update(order_id: origin.order_id + '_broken');
-        end
-    origin.update(service_status: :deleted)
-    app.update(service_status: :deleted);
-    sub.update(status: :deleted);
-    sub.charges.in_blocked.update(status: :deleted) if sub.charges.exists?
+    subscription = Subscription.find(subscription_id)
+    application = subscription.applications.last
+    origin = application.origin
+    origin.external_id.nil? ? origin.update(external_id: '_broken') : origin.update(external_id: origin.external_id + '_broken')
+    origin.microsoft_order_id.nil? ? origin.update(microsoft_order_id: '_broken') : origin.update(microsoft_order_id: origin.microsoft_order_id + '_broken')
+    origin.update(service_status: :deleted) if origin.respond_to?(:service_status)
+    application.update(service_status: :deleted)
+    subscription.update(status: :deleted)
+    subscription.charges.in_blocked.update(status: :deleted) if subscription.charges.exists?
     Note.create!(
-        content: "Subscription was deleted only in AP | #{ticket_id}",
-        noteable_id: sub.id,
-        noteable_type: "Subscription",
-        manager_id: Manager.find_by(email: 'kiryl.masliukou@activeplatform.com', reseller_id: 65).id,
-        account_id: sub.account.id);
+      content: "Subscription was deleted only in AP | #{ticket_id}",
+      noteable_id: subscription.id,
+      noteable_type: "Subscription",
+      manager_id: Manager.find_by(email: 'kiryl.masliukou@activeplatform.com', reseller_id: 65).id,
+      account_id: subscription.account.id);
     puts " ---------------------------------------------"
-    puts " #{sub.id} | #{sub.name} | #{sub.status.upcase} | APP #{sub.applications.exists?}";
+    puts " #{subscription.id} | #{subscription.name} | #{subscription.status.upcase} | APP #{subscription.applications.exists?}"
     puts " ---------------------------------------------"
   end
 end
